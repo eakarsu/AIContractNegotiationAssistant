@@ -203,7 +203,7 @@ Analyze thoroughly and respond with a JSON object containing:
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-haiku-20240307',
+        model: 'anthropic/claude-3-5-sonnet-20241022',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }

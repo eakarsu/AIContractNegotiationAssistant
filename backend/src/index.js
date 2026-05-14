@@ -1,10 +1,12 @@
 require('dotenv').config({ path: '../.env' });
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const { PrismaClient } = require('@prisma/client');
 
 const authMiddleware = require('./middleware/auth');
 const sanitize = require('./middleware/sanitize');
+const { aiRateLimiter } = require('./middleware/rateLimiter');
 
 const authRoutes = require('./routes/auth');
 const contractRoutes = require('./routes/contracts');
@@ -21,6 +23,10 @@ const chatRoutes = require('./routes/chat');
 const analyticsRoutes = require('./routes/analytics');
 const exportRoutes = require('./routes/exports');
 
+// New endpoints
+const aiNewRoutes = require('./routes/aiNew');
+const documentRoutes = require('./routes/documents');
+
 // New AI Tools Routes
 const riskClauseHighlighterRoutes = require('./routes/riskClauseHighlighter');
 const standardTermsComparerRoutes = require('./routes/standardTermsComparer');
@@ -34,8 +40,24 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5001;
 
-// Middleware
-app.use(cors());
+// Middleware - security headers
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
+// Env-driven CORS
+const corsOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',').map(o => o.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (corsOrigins.includes('*') || corsOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(sanitize);
 
@@ -62,15 +84,32 @@ app.use('/api/chat', authMiddleware, chatRoutes);
 app.use('/api/analytics', authMiddleware, analyticsRoutes);
 app.use('/api/exports', authMiddleware, exportRoutes);
 
-// New AI Tools Routes
-app.use('/api/ai/risk-clause-highlighter', authMiddleware, riskClauseHighlighterRoutes);
-app.use('/api/ai/standard-terms-comparer', authMiddleware, standardTermsComparerRoutes);
-app.use('/api/ai/plain-language-translator', authMiddleware, plainLanguageTranslatorRoutes);
-app.use('/api/ai/precedent-finder', authMiddleware, precedentFinderRoutes);
-app.use('/api/ai/nda-generator', authMiddleware, ndaGeneratorRoutes);
-app.use('/api/ai/terms-of-service-builder', authMiddleware, termsOfServiceBuilderRoutes);
-app.use('/api/ai/lease-analyzer', authMiddleware, leaseAnalyzerRoutes);
-app.use('/api/ai/compliance-audit-agents', authMiddleware, require('./routes/complianceAuditAgents'));
+// New AI Tools Routes (rate limited)
+app.use('/api/ai/risk-clause-highlighter', authMiddleware, aiRateLimiter, riskClauseHighlighterRoutes);
+app.use('/api/ai/standard-terms-comparer', authMiddleware, aiRateLimiter, standardTermsComparerRoutes);
+app.use('/api/ai/plain-language-translator', authMiddleware, aiRateLimiter, plainLanguageTranslatorRoutes);
+app.use('/api/ai/precedent-finder', authMiddleware, aiRateLimiter, precedentFinderRoutes);
+app.use('/api/ai/nda-generator', authMiddleware, aiRateLimiter, ndaGeneratorRoutes);
+app.use('/api/ai/terms-of-service-builder', authMiddleware, aiRateLimiter, termsOfServiceBuilderRoutes);
+app.use('/api/ai/lease-analyzer', authMiddleware, aiRateLimiter, leaseAnalyzerRoutes);
+app.use('/api/ai/compliance-audit-agents', authMiddleware, aiRateLimiter, require('./routes/complianceAuditAgents'));
+
+// New AI endpoints
+app.use('/api/ai', authMiddleware, aiNewRoutes);
+
+
+
+
+
+app.use('/api/ai', require('./routes/precedentScale'));
+app.use('/api/ai', require('./routes/playbookGenerate'));
+app.use('/api/ai', require('./routes/marketBenchmark'));
+app.use('/api/ai', require('./routes/regulatoryAlerts'));
+app.use('/api/ai', require('./routes/agenticModeling'));
+app.use('/api/documents', authMiddleware, documentRoutes);
+
+// 8 new custom non-CRUD AI features (audit-driven)
+app.use('/api/ai', authMiddleware, require('./routes/aiCustom'));
 
 // Dashboard stats
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
@@ -114,6 +153,21 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
+
+// // === Batch 02 Gaps & Frontend Mounts ===
+app.use('/api/gap-all-specialized-analyzers-leaseanalyzer-plainlanguagetransla', require('./routes/gap_all_specialized_analyzers_leaseanalyzer_plainlanguagetransla'));
+
+// // === Batch 02 Gaps & Frontend Mounts ===
+app.use('/api/gap-no-git-style-version-control-or-track-changes-ui-integration', require('./routes/gap_no_git_style_version_control_or_track_changes_ui_integration'));
+
+// // === Batch 02 Gaps & Frontend Mounts ===
+app.use('/api/gap-no-e-signature-workflow-integration-docusign-hellosign', require('./routes/gap_no_e_signature_workflow_integration_docusign_hellosign'));
+
+// // === Batch 02 Gaps & Frontend Mounts ===
+app.use('/api/gap-no-integration-with-legal-research-apis-westlaw-lexisnexis', require('./routes/gap_no_integration_with_legal_research_apis_westlaw_lexisnexis'));
+
+// // === Batch 02 Gaps & Frontend Mounts ===
+app.use('/api/gap-no-deal-room-data-room-management-for-due-diligence', require('./routes/gap_no_deal_room_data_room_management_for_due_diligence'));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -47,8 +47,26 @@ import TermsOfServiceBuilderDetail from './pages/TermsOfServiceBuilderDetail';
 import LeaseAnalyzer from './pages/LeaseAnalyzer';
 import LeaseAnalyzerDetail from './pages/LeaseAnalyzerDetail';
 import ComplianceAuditAgents from './pages/ComplianceAuditAgents';
+import AICustomTools from './pages/AICustomTools';
+import HighlightRisksStateless from './pages/HighlightRisksStateless';
+import StandardTermsCompareStateless from './pages/StandardTermsCompareStateless';
+import RankRiskClausesStateless from './pages/RankRiskClausesStateless';
+import SuggestRedlineCounterStateless from './pages/SuggestRedlineCounterStateless';
+import ChatAboutContractStateless from './pages/ChatAboutContractStateless';
 
 import api from './services/api';
+
+// // === Batch 02 Gaps & Frontend Mounts ===
+import CfAgenticNegotiationModeling from './pages/CfAgenticNegotiationModeling';
+import CfRegulatoryChangeAlerting from './pages/CfRegulatoryChangeAlerting';
+import CfBenchmarkingAgainstMarket from './pages/CfBenchmarkingAgainstMarket';
+import CfNegotiationPlaybookGeneration from './pages/CfNegotiationPlaybookGeneration';
+import CfPrecedentAnalysisAtScale from './pages/CfPrecedentAnalysisAtScale';
+import GapAllSpecializedAnalyzersLeaseanalyzerPlainlanguagetransla from './pages/GapAllSpecializedAnalyzersLeaseanalyzerPlainlanguagetransla';
+import GapNoGitStyleVersionControlOrTrackChangesUiIntegration from './pages/GapNoGitStyleVersionControlOrTrackChangesUiIntegration';
+import GapNoESignatureWorkflowIntegrationDocusignHellosign from './pages/GapNoESignatureWorkflowIntegrationDocusignHellosign';
+import GapNoIntegrationWithLegalResearchApisWestlawLexisnexis from './pages/GapNoIntegrationWithLegalResearchApisWestlawLexisnexis';
+import GapNoDealRoomDataRoomManagementForDueDiligence from './pages/GapNoDealRoomDataRoomManagementForDueDiligence';
 
 type AuthView = 'login' | 'register' | 'forgot-password';
 
@@ -147,9 +165,27 @@ function App() {
             <Route path="/ai-tools/lease-analyzer" element={<LeaseAnalyzer />} />
             <Route path="/ai-tools/lease-analyzer/:id" element={<LeaseAnalyzerDetail />} />
             <Route path="/ai-tools/compliance-audit-agents" element={<ComplianceAuditAgents />} />
+            <Route path="/ai-tools/custom" element={<AICustomTools />} />
+            <Route path="/ai-tools/highlight-risks" element={<HighlightRisksStateless />} />
+            <Route path="/ai-tools/standard-terms-compare" element={<StandardTermsCompareStateless />} />
+            <Route path="/ai-tools/rank-risk-clauses" element={<RankRiskClausesStateless />} />
+            <Route path="/ai-tools/suggest-redline-counter" element={<SuggestRedlineCounterStateless />} />
+            <Route path="/ai-tools/chat-about-contract" element={<ChatAboutContractStateless />} />
 
             <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+          
+        {/* // === Batch 02 Gaps & Frontend Mounts === */}
+        <Route path="/cf/agentic-negotiation-modeling" element={<CfAgenticNegotiationModeling />} />
+        <Route path="/cf/regulatory-change-alerting" element={<CfRegulatoryChangeAlerting />} />
+        <Route path="/cf/benchmarking-against-market" element={<CfBenchmarkingAgainstMarket />} />
+        <Route path="/cf/negotiation-playbook-generation" element={<CfNegotiationPlaybookGeneration />} />
+        <Route path="/cf/precedent-analysis-at-scale" element={<CfPrecedentAnalysisAtScale />} />
+        <Route path="/gap/all-specialized-analyzers-leaseanalyzer-plainlanguagetransla" element={<GapAllSpecializedAnalyzersLeaseanalyzerPlainlanguagetransla />} />
+        <Route path="/gap/no-git-style-version-control-or-track-changes-ui-integration" element={<GapNoGitStyleVersionControlOrTrackChangesUiIntegration />} />
+        <Route path="/gap/no-e-signature-workflow-integration-docusign-hellosign" element={<GapNoESignatureWorkflowIntegrationDocusignHellosign />} />
+        <Route path="/gap/no-integration-with-legal-research-apis-westlaw-lexisnexis" element={<GapNoIntegrationWithLegalResearchApisWestlawLexisnexis />} />
+        <Route path="/gap/no-deal-room-data-room-management-for-due-diligence" element={<GapNoDealRoomDataRoomManagementForDueDiligence />} />
+      </Routes>
         </Layout>
       </ErrorBoundary>
     </BrowserRouter>

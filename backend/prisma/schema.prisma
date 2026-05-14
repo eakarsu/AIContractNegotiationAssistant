@@ -329,3 +329,36 @@ model LeaseAnalysis {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
+
+// AIResult — generic JSON-stored AI output cache (audit pattern: ai_results JSONB)
+model AIResult {
+  id          Int      @id @default(autoincrement())
+  feature     String
+  contractId  Int?
+  userId      Int?
+  input       Json?
+  output      Json?
+  model       String?
+  usage       Json?
+  createdAt   DateTime @default(now())
+
+  @@index([feature])
+  @@index([contractId])
+  @@map("ai_results")
+}
+
+// Audit log for compliance and traceability
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  action     String
+  entityType String
+  entityId   Int?
+  details    Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@map("audit_logs")
+}

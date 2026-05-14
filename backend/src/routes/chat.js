@@ -1,9 +1,16 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const fetch = require('node-fetch');
+const { body, validationResult } = require('express-validator');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+function handleValidation(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  return null;
+}
 
 // Get chat history for a session
 router.get('/history/:sessionId', async (req, res) => {
@@ -19,7 +26,15 @@ router.get('/history/:sessionId', async (req, res) => {
 });
 
 // Send message to AI
-router.post('/message', async (req, res) => {
+router.post(
+  '/message',
+  [
+    body('sessionId').notEmpty().withMessage('sessionId is required'),
+    body('message').notEmpty().withMessage('message is required').isLength({ max: 50000 }).withMessage('message too long')
+  ],
+  async (req, res) => {
+  const validErr = handleValidation(req, res);
+  if (validErr !== null) return;
   try {
     const { sessionId, message, context, contractId } = req.body;
 
@@ -88,7 +103,7 @@ Content preview: ${contract.content.substring(0, 1000)}...`;
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5',
+        model: 'anthropic/claude-3-5-sonnet-20241022',
         messages,
         max_tokens: 2000
       })
@@ -124,7 +139,15 @@ Content preview: ${contract.content.substring(0, 1000)}...`;
 });
 
 // Analyze contract with AI
-router.post('/analyze-contract', async (req, res) => {
+router.post(
+  '/analyze-contract',
+  [
+    body('contractId').notEmpty().withMessage('contractId is required').isInt().withMessage('contractId must be an integer'),
+    body('analysisType').optional().isIn(['summary', 'risks', 'negotiation', 'compliance']).withMessage('Invalid analysisType')
+  ],
+  async (req, res) => {
+  const validErr = handleValidation(req, res);
+  if (validErr !== null) return;
   try {
     const { contractId, analysisType } = req.body;
 
@@ -180,7 +203,7 @@ ${clausesText}`;
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5',
+        model: 'anthropic/claude-3-5-sonnet-20241022',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 3000
       })
@@ -203,7 +226,14 @@ ${clausesText}`;
 });
 
 // Generate clause with AI
-router.post('/generate-clause', async (req, res) => {
+router.post(
+  '/generate-clause',
+  [
+    body('clauseType').notEmpty().withMessage('clauseType is required')
+  ],
+  async (req, res) => {
+  const validErr = handleValidation(req, res);
+  if (validErr !== null) return;
   try {
     const { clauseType, context, jurisdiction } = req.body;
 
@@ -230,7 +260,7 @@ Provide the clause text only, without explanations.`;
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5',
+        model: 'anthropic/claude-3-5-sonnet-20241022',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 1500
       })

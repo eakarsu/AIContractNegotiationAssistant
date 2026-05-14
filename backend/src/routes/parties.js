@@ -4,16 +4,45 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get all parties
+// Get all parties (with pagination)
 router.get('/', async (req, res) => {
   try {
-    const parties = await prisma.party.findMany({
-      include: {
-        _count: { select: { contracts: true, negotiations: true } }
-      },
-      orderBy: { createdAt: 'desc' }
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+    const { type, search } = req.query;
+
+    const where = {};
+    if (type) where.type = type;
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    const [parties, total] = await Promise.all([
+      prisma.party.findMany({
+        where,
+        include: { _count: { select: { contracts: true, negotiations: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.party.count({ where })
+    ]);
+
+    res.json({
+      data: parties,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPrevPage: page > 1
+      }
     });
-    res.json(parties);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

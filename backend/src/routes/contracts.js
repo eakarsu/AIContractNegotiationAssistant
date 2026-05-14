@@ -4,17 +4,50 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get all contracts
+// Get all contracts (with pagination)
 router.get('/', async (req, res) => {
   try {
-    const contracts = await prisma.contract.findMany({
-      include: {
-        party: true,
-        user: { select: { id: true, name: true, email: true } }
-      },
-      orderBy: { createdAt: 'desc' }
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+    const { status, contractType, riskLevel, search } = req.query;
+
+    const where = {};
+    if (status) where.status = status;
+    if (contractType) where.contractType = contractType;
+    if (riskLevel) where.riskLevel = riskLevel;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    const [contracts, total] = await Promise.all([
+      prisma.contract.findMany({
+        where,
+        include: {
+          party: true,
+          user: { select: { id: true, name: true, email: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.contract.count({ where })
+    ]);
+
+    res.json({
+      data: contracts,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPrevPage: page > 1
+      }
     });
-    res.json(contracts);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

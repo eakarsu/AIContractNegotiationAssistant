@@ -4,19 +4,45 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get all clauses
+// Get all clauses (with pagination)
 router.get('/', async (req, res) => {
   try {
-    const { category, riskLevel } = req.query;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+    const { category, riskLevel, search } = req.query;
+
     const where = {};
     if (category) where.category = category;
     if (riskLevel) where.riskLevel = riskLevel;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } }
+      ];
+    }
 
-    const clauses = await prisma.clause.findMany({
-      where,
-      orderBy: { createdAt: 'desc' }
+    const [clauses, total] = await Promise.all([
+      prisma.clause.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.clause.count({ where })
+    ]);
+
+    res.json({
+      data: clauses,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPrevPage: page > 1
+      }
     });
-    res.json(clauses);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

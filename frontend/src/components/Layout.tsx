@@ -61,6 +61,9 @@ const aiToolsMenuItems = [
   { path: '/ai-tools/terms-of-service-builder', icon: Globe, label: 'Terms of Service Builder' },
   { path: '/ai-tools/lease-analyzer', icon: Building, label: 'Lease Analyzer' },
   { path: '/ai-tools/compliance-audit-agents', icon: Shield, label: 'Compliance Audit Agents' },
+  { path: '/ai-tools/custom', icon: Bot, label: 'AI Custom Tools (8 new)' },
+  { path: '/ai-tools/highlight-risks', icon: AlertTriangle, label: 'Highlight Risks (Stateless)' },
+  { path: '/ai-tools/standard-terms-compare', icon: GitCompareArrows, label: 'Standard Terms Compare (Stateless)' },
 ];
 
 export default function Layout({ children, user, onLogout }: LayoutProps) {
