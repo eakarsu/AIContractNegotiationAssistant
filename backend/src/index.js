@@ -111,6 +111,9 @@ app.use('/api/documents', authMiddleware, documentRoutes);
 // 8 new custom non-CRUD AI features (audit-driven)
 app.use('/api/ai', authMiddleware, require('./routes/aiCustom'));
 
+// Custom Views (4 features: clause diff, negotiation timeline, redline PDF, clause library)
+app.use('/api/custom-views', authMiddleware, require('./routes/customViews'));
+
 // Dashboard stats
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
   try {

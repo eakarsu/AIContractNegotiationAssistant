@@ -53,6 +53,7 @@ import StandardTermsCompareStateless from './pages/StandardTermsCompareStateless
 import RankRiskClausesStateless from './pages/RankRiskClausesStateless';
 import SuggestRedlineCounterStateless from './pages/SuggestRedlineCounterStateless';
 import ChatAboutContractStateless from './pages/ChatAboutContractStateless';
+import CustomViewsPage from './pages/CustomViewsPage';
 
 import api from './services/api';
 
@@ -171,6 +172,7 @@ function App() {
             <Route path="/ai-tools/rank-risk-clauses" element={<RankRiskClausesStateless />} />
             <Route path="/ai-tools/suggest-redline-counter" element={<SuggestRedlineCounterStateless />} />
             <Route path="/ai-tools/chat-about-contract" element={<ChatAboutContractStateless />} />
+            <Route path="/custom-views" element={<CustomViewsPage />} />
 
             <Route path="*" element={<Navigate to="/" />} />
           

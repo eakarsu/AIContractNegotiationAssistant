@@ -50,6 +50,7 @@ const mainMenuItems = [
   { path: '/deadlines', icon: Clock, label: 'Deadlines' },
   { path: '/chat', icon: Bot, label: 'AI Assistant' },
   { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { path: '/custom-views', icon: Settings, label: 'Contract Views' },
 ];
 
 const aiToolsMenuItems = [
