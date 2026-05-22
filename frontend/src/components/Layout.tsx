@@ -51,6 +51,7 @@ const mainMenuItems = [
   { path: '/chat', icon: Bot, label: 'AI Assistant' },
   { path: '/analytics', icon: BarChart3, label: 'Analytics' },
   { path: '/custom-views', icon: Settings, label: 'Contract Views' },
+  { path: '/fallback-clause-matrix', icon: GitCompareArrows, label: 'Fallback Matrix' },
 ];
 
 const aiToolsMenuItems = [

@@ -167,7 +167,7 @@ Provide exactly 3 of the most important redline suggestions. Focus on the highes
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-5-sonnet-20241022',
+        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: userMessage }

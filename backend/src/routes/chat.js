@@ -103,7 +103,7 @@ Content preview: ${contract.content.substring(0, 1000)}...`;
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-5-sonnet-20241022',
+        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022',
         messages,
         max_tokens: 2000
       })
@@ -203,7 +203,7 @@ ${clausesText}`;
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-5-sonnet-20241022',
+        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 3000
       })
@@ -260,7 +260,7 @@ Provide the clause text only, without explanations.`;
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-5-sonnet-20241022',
+        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 1500
       })

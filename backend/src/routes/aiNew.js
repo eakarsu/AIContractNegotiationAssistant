@@ -6,7 +6,7 @@ const { aiRateLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 const SYSTEM_PROMPT = 'You are an expert contract negotiation attorney with deep knowledge of commercial law, deal structuring, and negotiation strategy.';
-const OPENROUTER_MODEL = 'anthropic/claude-3-5-sonnet-20241022';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022';
 
 async function callOpenRouter(systemPrompt, userMessage) {
   if (!process.env.OPENROUTER_API_KEY) {

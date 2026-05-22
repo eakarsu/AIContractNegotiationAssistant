@@ -10,7 +10,7 @@ const fetch = require('node-fetch');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const DEFAULT_MODEL = 'anthropic/claude-3-5-sonnet-20241022';
+const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022';
 
 async function callOpenRouter(systemPrompt, userMessage, opts = {}) {
   const { temperature = 0.5, maxTokens = 3000, model = DEFAULT_MODEL } = opts;

@@ -113,6 +113,7 @@ app.use('/api/ai', authMiddleware, require('./routes/aiCustom'));
 
 // Custom Views (4 features: clause diff, negotiation timeline, redline PDF, clause library)
 app.use('/api/custom-views', authMiddleware, require('./routes/customViews'));
+app.use('/api/fallback-clause-matrix', authMiddleware, require('./routes/fallbackClauseMatrix'));
 
 // Dashboard stats
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {

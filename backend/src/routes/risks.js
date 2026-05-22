@@ -193,7 +193,7 @@ Respond with a JSON object containing:
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-5-sonnet-20241022',
+        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' }
       })

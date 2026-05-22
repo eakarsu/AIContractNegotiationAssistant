@@ -54,6 +54,7 @@ import RankRiskClausesStateless from './pages/RankRiskClausesStateless';
 import SuggestRedlineCounterStateless from './pages/SuggestRedlineCounterStateless';
 import ChatAboutContractStateless from './pages/ChatAboutContractStateless';
 import CustomViewsPage from './pages/CustomViewsPage';
+import FallbackClauseMatrix from './pages/FallbackClauseMatrix';
 
 import api from './services/api';
 
@@ -68,6 +69,9 @@ import GapNoGitStyleVersionControlOrTrackChangesUiIntegration from './pages/GapN
 import GapNoESignatureWorkflowIntegrationDocusignHellosign from './pages/GapNoESignatureWorkflowIntegrationDocusignHellosign';
 import GapNoIntegrationWithLegalResearchApisWestlawLexisnexis from './pages/GapNoIntegrationWithLegalResearchApisWestlawLexisnexis';
 import GapNoDealRoomDataRoomManagementForDueDiligence from './pages/GapNoDealRoomDataRoomManagementForDueDiligence';
+
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
 
 type AuthView = 'login' | 'register' | 'forgot-password';
 
@@ -124,6 +128,9 @@ function App() {
       <ErrorBoundary>
         <Layout user={user} onLogout={handleLogout}>
           <Routes>
+        <Route path="/codex/custom-viz" element={<CodexCustomVizFeature />} />
+        <Route path="/codex/operations" element={<CodexOperationsFeature />} />
+
             <Route path="/" element={<Dashboard />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/contracts/:id" element={<ContractDetail />} />
@@ -173,6 +180,7 @@ function App() {
             <Route path="/ai-tools/suggest-redline-counter" element={<SuggestRedlineCounterStateless />} />
             <Route path="/ai-tools/chat-about-contract" element={<ChatAboutContractStateless />} />
             <Route path="/custom-views" element={<CustomViewsPage />} />
+            <Route path="/fallback-clause-matrix" element={<FallbackClauseMatrix />} />
 
             <Route path="*" element={<Navigate to="/" />} />
           

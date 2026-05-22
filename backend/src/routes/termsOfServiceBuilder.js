@@ -162,7 +162,7 @@ Generate a complete Terms of Service document and respond with a JSON object con
         'X-Title': 'Contract Negotiation Assistant'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-5-sonnet-20241022',
+        model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: prompt }
