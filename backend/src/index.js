@@ -69,6 +69,11 @@ app.get('/api/health', (req, res) => {
 // Auth routes (no auth middleware needed)
 app.use('/api/auth', authRoutes);
 
+// Tenant-scoped, playbook-grounded reference workflow.
+app.use('/api/governed-negotiations', authMiddleware, require('./routes/governedNegotiation'));
+
+if (process.env.ENABLE_LEGACY_GLOBAL_ROUTES === 'true') {
+
 // Protected routes
 app.use('/api/contracts', authMiddleware, contractRoutes);
 app.use('/api/clauses', authMiddleware, clauseRoutes);
@@ -101,11 +106,11 @@ app.use('/api/ai', authMiddleware, aiNewRoutes);
 
 
 
-app.use('/api/ai', require('./routes/precedentScale'));
-app.use('/api/ai', require('./routes/playbookGenerate'));
-app.use('/api/ai', require('./routes/marketBenchmark'));
-app.use('/api/ai', require('./routes/regulatoryAlerts'));
-app.use('/api/ai', require('./routes/agenticModeling'));
+app.use('/api/ai', authMiddleware, aiRateLimiter, require('./routes/precedentScale'));
+app.use('/api/ai', authMiddleware, aiRateLimiter, require('./routes/playbookGenerate'));
+app.use('/api/ai', authMiddleware, aiRateLimiter, require('./routes/marketBenchmark'));
+app.use('/api/ai', authMiddleware, aiRateLimiter, require('./routes/regulatoryAlerts'));
+app.use('/api/ai', authMiddleware, aiRateLimiter, require('./routes/agenticModeling'));
 app.use('/api/documents', authMiddleware, documentRoutes);
 
 // 8 new custom non-CRUD AI features (audit-driven)
@@ -152,26 +157,18 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
   }
 });
 
+} else {
+  app.use('/api', (req, res) => res.status(404).json({
+    error: 'legacy_routes_disabled',
+    message: 'Use /api/governed-negotiations; legacy breadth is disabled pending tenant and integration validation.',
+  }));
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-all-specialized-analyzers-leaseanalyzer-plainlanguagetransla', require('./routes/gap_all_specialized_analyzers_leaseanalyzer_plainlanguagetransla'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-no-git-style-version-control-or-track-changes-ui-integration', require('./routes/gap_no_git_style_version_control_or_track_changes_ui_integration'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-no-e-signature-workflow-integration-docusign-hellosign', require('./routes/gap_no_e_signature_workflow_integration_docusign_hellosign'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-no-integration-with-legal-research-apis-westlaw-lexisnexis', require('./routes/gap_no_integration_with_legal_research_apis_westlaw_lexisnexis'));
-
-// // === Batch 02 Gaps & Frontend Mounts ===
-app.use('/api/gap-no-deal-room-data-room-management-for-due-diligence', require('./routes/gap_no_deal_room_data_room_management_for_due_diligence'));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -1,193 +1,83 @@
+'use strict';
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const authMiddleware = require('../middleware/auth');
+const { JWT_SECRET } = require('../middleware/auth');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Register
+function publicUser(user) {
+  return { id: user.id, email: user.email, name: user.name, role: user.role, tenantId: user.tenantId };
+}
+function tokenFor(user) {
+  return jwt.sign({ userId: user.id, email: user.email, role: user.role, tenantId: user.tenantId }, JWT_SECRET,
+    { algorithm: 'HS256', expiresIn: '8h' });
+}
+function validPassword(value) { return typeof value === 'string' && value.length >= 12 && value.length <= 128; }
+
 router.post('/register', async (req, res) => {
+  if (process.env.ALLOW_SELF_REGISTRATION !== 'true') {
+    return res.status(403).json({ error: 'Self-registration is disabled; use the audited provisioning command' });
+  }
   try {
-    const { email, password, name, role } = req.body;
-
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return res.status(409).json({ error: 'An account with this email already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        role: role || 'user'
-      }
-    });
-
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.status(201).json({
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
-      token
-    });
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const name = String(req.body.name || '').trim();
+    const password = req.body.password;
+    const tenantId = String(process.env.SELF_REGISTRATION_TENANT_ID || '').trim();
+    if (!email || !name || !tenantId || !validPassword(password)) return res.status(422).json({ error: 'email, name, configured tenant, and a 12-128 character password are required' });
+    const user = await prisma.user.create({ data: { email, password: await bcrypt.hash(password, 12), name, role: 'negotiator', tenantId } });
+    res.status(201).json({ user: publicUser(user), token: tokenFor(user) });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    if (error.code === 'P2002') return res.status(409).json({ error: 'An account with this email already exists' });
+    console.error('[auth/register]', error.message); res.status(503).json({ error: 'Registration unavailable' });
   }
 });
 
-// Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-
+    const email = String(req.body.email || '').trim().toLowerCase(); const password = String(req.body.password || '');
+    if (!email || !password) return res.status(400).json({ error: 'email and password are required' });
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.json({
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
-      token
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials' });
+    res.json({ user: publicUser(user), token: tokenFor(user) });
+  } catch (error) { console.error('[auth/login]', error.message); res.status(503).json({ error: 'Authentication service unavailable' }); }
 });
 
-// Get current user
-router.get('/me', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { id: true, email: true, name: true, role: true }
-    });
-
-    res.json(user);
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
+router.get('/me', authMiddleware, async (req, res) => {
+  const user = await prisma.user.findFirst({ where: { id: req.user.userId, tenantId: req.user.tenantId } });
+  if (!user) return res.status(404).json({ error: 'user_not_found' });
+  res.json(publicUser(user));
 });
 
-// Update profile
-router.put('/profile', async (req, res) => {
+router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { name, email } = req.body;
-
-    if (email) {
-      const existing = await prisma.user.findFirst({
-        where: { email, NOT: { id: decoded.userId } }
-      });
-      if (existing) {
-        return res.status(409).json({ error: 'Email is already in use' });
-      }
-    }
-
-    const user = await prisma.user.update({
-      where: { id: decoded.userId },
-      data: { ...(name && { name }), ...(email && { email }) },
-      select: { id: true, email: true, name: true, role: true }
-    });
-
-    res.json(user);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+    const name = String(req.body.name || '').trim();
+    if (!name) return res.status(422).json({ error: 'name is required' });
+    const found = await prisma.user.findFirst({ where: { id: req.user.userId, tenantId: req.user.tenantId } });
+    if (!found) return res.status(404).json({ error: 'user_not_found' });
+    const user = await prisma.user.update({ where: { id: found.id }, data: { name } });
+    res.json(publicUser(user));
+  } catch (error) { console.error('[auth/profile]', error.message); res.status(503).json({ error: 'Profile update unavailable' }); }
 });
 
-// Change password
-router.put('/change-password', async (req, res) => {
+router.put('/change-password', authMiddleware, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { currentPassword, newPassword } = req.body;
-
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-    const isValid = await bcrypt.compare(currentPassword, user.password);
-    if (!isValid) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({
-      where: { id: decoded.userId },
-      data: { password: hashedPassword }
-    });
-
+    if (!validPassword(req.body.newPassword)) return res.status(422).json({ error: 'newPassword must contain 12-128 characters' });
+    const user = await prisma.user.findFirst({ where: { id: req.user.userId, tenantId: req.user.tenantId } });
+    if (!user || !(await bcrypt.compare(String(req.body.currentPassword || ''), user.password))) return res.status(400).json({ error: 'Current password is incorrect' });
+    await prisma.user.update({ where: { id: user.id }, data: { password: await bcrypt.hash(req.body.newPassword, 12) } });
     res.json({ message: 'Password changed successfully' });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+  } catch (error) { console.error('[auth/password]', error.message); res.status(503).json({ error: 'Password update unavailable' }); }
 });
 
-// Forgot password (simplified - logs reset token, in production would send email)
-router.post('/forgot-password', async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      // Don't reveal if email exists
-      return res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
-    }
-
-    const resetToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    console.log(`Password reset token for ${email}: ${resetToken}`);
-
-    res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Reset password
-router.post('/reset-password', async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({
-      where: { id: decoded.userId },
-      data: { password: hashedPassword }
-    });
-
-    res.json({ message: 'Password reset successfully' });
-  } catch (error) {
-    res.status(400).json({ error: 'Invalid or expired reset token' });
-  }
-});
+router.post('/forgot-password', (req, res) => res.status(503).json({
+  error: 'Password reset is disabled until a verified delivery provider and one-time token store are configured',
+}));
+router.post('/reset-password', (req, res) => res.status(503).json({
+  error: 'Password reset is disabled until a verified delivery provider and one-time token store are configured',
+}));
 
 module.exports = router;

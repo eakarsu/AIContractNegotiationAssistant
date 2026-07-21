@@ -13,6 +13,7 @@ model User {
   password  String
   name      String
   role      String    @default("user")
+  tenantId  String    @default("default") @map("tenant_id")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   contracts Contract[]
@@ -361,4 +362,120 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([userId])
   @@map("audit_logs")
+}
+
+model GovernedMatter {
+  id             Int      @id @default(autoincrement())
+  tenantId       String   @map("tenant_id")
+  matterKey      String   @map("matter_key")
+  name           String
+  privilegeLabel String   @map("privilege_label")
+  status         String   @default("active")
+  createdById    Int      @map("created_by_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, matterKey])
+  @@index([tenantId, id])
+  @@map("governed_matters")
+}
+
+model GovernedPlaybook {
+  id             Int      @id @default(autoincrement())
+  tenantId       String   @map("tenant_id")
+  matterId       Int      @map("matter_id")
+  name           String
+  version        String
+  jurisdiction   String
+  contentHash    String   @map("content_hash")
+  approvedById   Int      @map("approved_by_id")
+  approvedAt     DateTime @default(now()) @map("approved_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([tenantId, matterId, name, version])
+  @@index([tenantId, matterId])
+  @@map("governed_playbooks")
+}
+
+model GovernedPlaybookRule {
+  id            Int      @id @default(autoincrement())
+  tenantId      String   @map("tenant_id")
+  playbookId    Int      @map("playbook_id")
+  ruleKey       String   @map("rule_key")
+  clauseType    String   @map("clause_type")
+  sourceClause  String   @map("source_clause")
+  preferredText String   @map("preferred_text")
+  fallbackText  String?  @map("fallback_text")
+  riskLevel     String   @map("risk_level")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([playbookId, ruleKey])
+  @@index([tenantId, playbookId])
+  @@map("governed_playbook_rules")
+}
+
+model GovernedContractVersion {
+  id               Int      @id @default(autoincrement())
+  tenantId         String   @map("tenant_id")
+  matterId         Int      @map("matter_id")
+  versionNumber    Int      @map("version_number")
+  contentHash      String   @map("content_hash")
+  sourceDocumentId String   @map("source_document_id")
+  createdById      Int      @map("created_by_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@unique([tenantId, matterId, versionNumber])
+  @@index([tenantId, matterId])
+  @@map("governed_contract_versions")
+}
+
+model GovernedRedline {
+  id                Int      @id @default(autoincrement())
+  tenantId          String   @map("tenant_id")
+  matterId          Int      @map("matter_id")
+  contractVersionId Int      @map("contract_version_id")
+  playbookRuleId    Int      @map("playbook_rule_id")
+  sourceText        String   @map("source_text")
+  proposedText      String   @map("proposed_text")
+  rationale         String
+  tradeoffs         String
+  citation          Json
+  policyResult      String   @map("policy_result")
+  status            String   @default("pending")
+  createdById       Int      @map("created_by_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId, matterId])
+  @@map("governed_redlines")
+}
+
+model GovernedRedlineApproval {
+  id         Int      @id @default(autoincrement())
+  tenantId   String   @map("tenant_id")
+  redlineId  Int      @map("redline_id")
+  gate       String
+  decision   String
+  rationale  String
+  approverId Int      @map("approver_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([tenantId, redlineId, gate])
+  @@index([tenantId, redlineId])
+  @@map("governed_redline_approvals")
+}
+
+model GovernedNegotiationEvent {
+  id             Int      @id @default(autoincrement())
+  tenantId       String   @map("tenant_id")
+  matterId       Int      @map("matter_id")
+  eventType      String   @map("event_type")
+  actorUserId    Int      @map("actor_user_id")
+  payload        Json
+  previousHash   String?  @map("previous_hash")
+  eventHash      String   @unique @map("event_hash")
+  occurredAt     DateTime @default(now()) @map("occurred_at")
+
+  @@index([tenantId, matterId, id])
+  @@map("governed_negotiation_events")
 }

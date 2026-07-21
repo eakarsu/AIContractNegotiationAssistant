@@ -7,8 +7,10 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:seed": "node src/seed.js"
+    "db:migrate": "prisma migrate deploy",
+    "db:seed:demo": "ALLOW_DEMO_SEED=true node src/seed.js",
+    "create-user": "node scripts/create-user.js",
+    "test": "node --test test/governed-workflow.test.js"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
