@@ -31,8 +31,8 @@ export default function Login({ onLogin, onSwitchToRegister, onForgotPassword }:
   };
 
   const fillDemoCredentials = () => {
-    setEmail('admin@contractai.com');
-    setPassword('password123');
+    setEmail(import.meta.env.VITE_DEMO_EMAIL || '');
+    setPassword(import.meta.env.VITE_DEMO_PASSWORD || '');
   };
 
   return (

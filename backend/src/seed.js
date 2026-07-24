@@ -7,6 +7,12 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
+function requireDemoPassword() {
+  const password = process.env.DEMO_PASSWORD || process.env.SEED_DEMO_PASSWORD || process.env.DEMO_SEED_PASSWORD || '';
+  if (password.length < 12 || password.length > 1024) throw new Error('DEMO_PASSWORD must contain 12-1024 characters');
+  return password;
+}
+
 async function seed() {
   console.log('Starting database seed...');
 
@@ -36,7 +42,7 @@ async function seed() {
   await prisma.leaseAnalysis.deleteMany();
 
   console.log('Creating users...');
-  const hashedPassword = await bcrypt.hash('password123', 10);
+  const hashedPassword = await bcrypt.hash(requireDemoPassword(), 10);
   const users = await Promise.all([
     prisma.user.create({ data: { email: 'admin@contractai.com', password: hashedPassword, name: 'Admin User', role: 'admin' } }),
     prisma.user.create({ data: { email: 'lawyer@contractai.com', password: hashedPassword, name: 'Sarah Johnson', role: 'lawyer' } }),
