@@ -18,6 +18,24 @@ function tokenFor(user) {
 }
 function validPassword(value) { return typeof value === 'string' && value.length >= 12 && value.length <= 128; }
 
+router.get('/demo-credentials', (req, res) => {
+  if (
+    process.env.NODE_ENV === 'production' ||
+    process.env.ENABLE_DEMO_CREDENTIAL_AUTOFILL === 'false'
+  ) {
+    return res.status(404).json({ error: 'Demo credentials are unavailable' });
+  }
+
+  const email = process.env.DEMO_EMAIL || process.env.SEED_ADMIN_EMAIL;
+  const password = process.env.DEMO_PASSWORD || process.env.SEED_ADMIN_PASSWORD;
+  if (!email || !password) {
+    return res.status(404).json({ error: 'Demo credentials are unavailable' });
+  }
+
+  res.set('Cache-Control', 'no-store');
+  return res.json({ email, password });
+});
+
 router.post('/register', async (req, res) => {
   if (process.env.ALLOW_SELF_REGISTRATION !== 'true') {
     return res.status(403).json({ error: 'Self-registration is disabled; use the audited provisioning command' });

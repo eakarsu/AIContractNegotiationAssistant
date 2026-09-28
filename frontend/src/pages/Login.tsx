@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Scale, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { login } from '../services/api';
+import { getDemoCredentials, login } from '../services/api';
 
 interface LoginProps {
   onLogin: (user: any, token: string) => void;
@@ -30,9 +30,15 @@ export default function Login({ onLogin, onSwitchToRegister, onForgotPassword }:
     }
   };
 
-  const fillDemoCredentials = () => {
-    setEmail(import.meta.env.VITE_DEMO_EMAIL || '');
-    setPassword(import.meta.env.VITE_DEMO_PASSWORD || '');
+  const fillDemoCredentials = async () => {
+    setError('');
+    try {
+      const response = await getDemoCredentials();
+      setEmail(response.data.email);
+      setPassword(response.data.password);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Demo credentials are unavailable');
+    }
   };
 
   return (
@@ -134,10 +140,10 @@ export default function Login({ onLogin, onSwitchToRegister, onForgotPassword }:
               onClick={fillDemoCredentials}
               className="w-full py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
             >
-              Fill Demo Credentials
+              Auto Fill Demo Credentials
             </button>
             <p className="text-xs text-gray-500 text-center mt-3">
-              Email: admin@contractai.com | Password: password123
+              Fill the local demo account, then click Sign In.
             </p>
           </div>
         </div>
