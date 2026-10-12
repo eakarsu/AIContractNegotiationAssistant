@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, GitCompare, Trash2, Check, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Check, X, Loader2 } from 'lucide-react';
 import { getRedline, deleteRedline, acceptRedline, rejectRedline } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';

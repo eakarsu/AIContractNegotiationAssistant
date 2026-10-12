@@ -93,8 +93,7 @@ export default function ContractDetail() {
   const handleSuggestRedlines = async () => {
     setSuggestingRedlines(true);
     try {
-      const result = await suggestRedline(parseInt(id!), {});
-      const count = result.data?.redlines?.length || 1;
+      await suggestRedline(parseInt(id!), {});
       toast.success(`Redline suggestions generated`);
     } catch (error: any) {
       toast.error('Failed to generate suggestions: ' + (error.response?.data?.error || error.message));

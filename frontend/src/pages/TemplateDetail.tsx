@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LayoutTemplate, Edit, Trash2, Copy } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Copy } from 'lucide-react';
 import { getTemplate, updateTemplate, deleteTemplate, cloneTemplate } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';

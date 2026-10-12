@@ -1,6 +1,29 @@
+import FormattedAIReport from '../components/FormattedAIReport';
 import { useState } from 'react';
 import api from '../services/api';
 import { GitCompareArrows, Play } from 'lucide-react';
+
+
+const examples = [
+  {
+    "label": "SaaS renewal",
+    "contractType": "Software subscription",
+    "industry": "Business software",
+    "proposedTerms": "The subscription renews for one year unless the customer gives 90 days notice. The vendor may raise prices without a cap."
+  },
+  {
+    "label": "Service acceptance",
+    "contractType": "Services agreement",
+    "industry": "Professional services",
+    "proposedTerms": "Deliverables are deemed accepted on delivery. All fees are nonrefundable even for defective work."
+  },
+  {
+    "label": "Consulting ownership",
+    "contractType": "Consulting agreement",
+    "industry": "Advisory services",
+    "proposedTerms": "The client owns all materials, including the consultant’s pre-existing methods, before payment."
+  }
+];
 
 export default function StandardTermsCompareStateless() {
   const [proposedTerms, setProposedTerms] = useState('');
@@ -49,6 +72,9 @@ export default function StandardTermsCompareStateless() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4">Input</h2>
           <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3" aria-label="Fill sample inputs">
+              {examples.map((example) => <button key={example.label} type="button" disabled={loading} onClick={() => { setContractType(example.contractType); setIndustry(example.industry); setProposedTerms(example.proposedTerms); setResult(null); setError(null); }} className="rounded-lg bg-white border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100 disabled:opacity-50">{example.label}</button>)}
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contract Type <span className="text-red-500">*</span>
@@ -112,9 +138,7 @@ export default function StandardTermsCompareStateless() {
                   {result.industry && ` · Industry: ${result.industry}`}
                 </div>
               )}
-              <pre className="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-[600px] whitespace-pre-wrap">
-                {typeof result.comparison === 'string' ? result.comparison : JSON.stringify(result.comparison, null, 2)}
-              </pre>
+              <FormattedAIReport response={result} />
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageSquare, Edit, Trash2, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, ArrowRight } from 'lucide-react';
 import { getNegotiation, updateNegotiation, deleteNegotiation, advanceNegotiation } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';
@@ -52,7 +52,7 @@ export default function NegotiationDetail() {
   };
 
   const handleDelete = async () => {
-    const confirmed = await confirm('Are you sure you want to delete this negotiation?');
+    const confirmed = await confirm({ title: 'Delete negotiation', message: 'Are you sure you want to delete this negotiation?', confirmLabel: 'Delete', variant: 'danger' });
     if (!confirmed) return;
     if (submitting) return;
     setSubmitting(true);

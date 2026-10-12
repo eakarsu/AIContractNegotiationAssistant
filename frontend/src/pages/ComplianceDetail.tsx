@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { getComplianceCheck, deleteComplianceCheck } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, MessageSquare, Clock } from 'lucide-react';
+import { Plus, Search, MessageSquare } from 'lucide-react';
 import { getNegotiations, createNegotiation, getContracts, getParties, exportNegotiationsCSV, downloadBlob } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { useEscapeKey } from '../hooks/useEscapeKey';

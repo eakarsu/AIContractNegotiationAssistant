@@ -1,3 +1,4 @@
+import AIReportLibrary from "./AIReportLibrary";
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -258,7 +259,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
             <ChevronDown size={14} className={`transform ${sidebarOpen ? 'rotate-90' : '-rotate-90'}`} />
           </button>
         </div>
-      </aside>
+      <AIReportLibrary /></aside>
 
       {/* Main content */}
       <main className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'} pt-16 lg:pt-0`}>

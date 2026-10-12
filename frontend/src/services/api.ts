@@ -56,7 +56,26 @@ export const resetPassword = (token: string, newPassword: string) =>
 export const getDashboardStats = () => api.get('/dashboard/stats');
 
 // Contracts
-export const getContracts = (params?: any) => api.get('/contracts', { params });
+// These three endpoints return { data: records, pagination }, while the pages
+// consuming them use client-side filtering and pagination over an array.
+// Collect every server page so selectors and later client pages see real rows.
+const getPaginatedRecords = async (path: string, params?: any) => {
+  const records: any[] = [];
+  let page = 1;
+  let response;
+  do {
+    response = await api.get(path, { params: { ...params, page, limit: 100 } });
+    const payload = response.data;
+    if (!Array.isArray(payload?.data) || !payload.pagination || typeof payload.pagination.hasNextPage !== 'boolean') {
+      throw new TypeError(`Unexpected ${path} list response`);
+    }
+    records.push(...payload.data);
+    page += 1;
+  } while (response.data.pagination.hasNextPage);
+  return { ...response, data: records };
+};
+
+export const getContracts = (params?: any) => getPaginatedRecords('/contracts', params);
 export const getContract = (id: number) => api.get(`/contracts/${id}`);
 export const createContract = (data: any) => api.post('/contracts', data);
 export const updateContract = (id: number, data: any) => api.put(`/contracts/${id}`, data);
@@ -64,7 +83,7 @@ export const deleteContract = (id: number) => api.delete(`/contracts/${id}`);
 export const bulkDeleteContracts = (ids: number[]) => api.post('/contracts/bulk-delete', { ids });
 
 // Clauses
-export const getClauses = (params?: any) => api.get('/clauses', { params });
+export const getClauses = (params?: any) => getPaginatedRecords('/clauses', params);
 export const getClause = (id: number) => api.get(`/clauses/${id}`);
 export const createClause = (data: any) => api.post('/clauses', data);
 export const updateClause = (id: number, data: any) => api.put(`/clauses/${id}`, data);
@@ -72,7 +91,7 @@ export const deleteClause = (id: number) => api.delete(`/clauses/${id}`);
 export const bulkDeleteClauses = (ids: number[]) => api.post('/clauses/bulk-delete', { ids });
 
 // Parties
-export const getParties = (params?: any) => api.get('/parties', { params });
+export const getParties = (params?: any) => getPaginatedRecords('/parties', params);
 export const getParty = (id: number) => api.get(`/parties/${id}`);
 export const createParty = (data: any) => api.post('/parties', data);
 export const updateParty = (id: number, data: any) => api.put(`/parties/${id}`, data);

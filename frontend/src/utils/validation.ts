@@ -1,4 +1,4 @@
-type Validator = (value: any) => string | undefined;
+type Validator = (value: any, values?: Record<string, any>) => string | undefined;
 
 export const required = (msg = 'This field is required'): Validator => (v) =>
   v === undefined || v === null || v === '' ? msg : undefined;

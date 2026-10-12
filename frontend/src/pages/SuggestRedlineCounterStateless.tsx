@@ -1,6 +1,29 @@
+import FormattedAIReport from '../components/FormattedAIReport';
 import { useState } from 'react';
 import api from '../services/api';
 import { GitPullRequest, Play } from 'lucide-react';
+
+
+const examples = [
+  {
+    "label": "Fee changes",
+    "originalClause": "The supplier may increase fees at any time.",
+    "counterpartyRedline": "The supplier may increase fees on five days notice.",
+    "ourPosition": "Require written agreement before fee changes and a clear renewal price."
+  },
+  {
+    "label": "Data return",
+    "originalClause": "The vendor will return customer data within 30 days after termination.",
+    "counterpartyRedline": "The vendor may retain all customer data indefinitely.",
+    "ourPosition": "Preserve a practical export period and verified deletion obligations."
+  },
+  {
+    "label": "Acceptance",
+    "originalClause": "The customer has ten business days to review deliverables and request corrections.",
+    "counterpartyRedline": "Deliverables are accepted immediately upon delivery.",
+    "ourPosition": "Keep objective acceptance criteria and a reasonable correction period."
+  }
+];
 
 export default function SuggestRedlineCounterStateless() {
   const [originalClause, setOriginalClause] = useState('');
@@ -45,6 +68,9 @@ export default function SuggestRedlineCounterStateless() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4">Input</h2>
           <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3" aria-label="Fill sample inputs">
+              {examples.map((example) => <button key={example.label} type="button" disabled={loading} onClick={() => { setOriginalClause(example.originalClause); setCounterpartyRedline(example.counterpartyRedline); setOurPosition(example.ourPosition); setResult(null); setError(null); }} className="rounded-lg bg-white border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100 disabled:opacity-50">{example.label}</button>)}
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Original Clause <span className="text-red-500">*</span>
@@ -99,11 +125,7 @@ export default function SuggestRedlineCounterStateless() {
             <div className="text-gray-400 text-sm">No counter-redline yet.</div>
           )}
           {result && (
-            <pre className="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-[600px] whitespace-pre-wrap">
-              {typeof result.counter_redline === 'string'
-                ? result.counter_redline
-                : JSON.stringify(result.counter_redline, null, 2)}
-            </pre>
+            <FormattedAIReport response={result} />
           )}
         </div>
       </div>

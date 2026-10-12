@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, AlertTriangle, TrendingUp } from 'lucide-react';
-import { getRisks, createRisk, getContracts, analyzeContractRisk } from '../services/api';
+import { Plus, Search, AlertTriangle } from 'lucide-react';
+import { getRisks, getContracts, analyzeContractRisk } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import CardGridSkeleton from '../components/skeletons/CardGridSkeleton';
@@ -127,6 +127,11 @@ export default function RiskAnalysis() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md m-4">
             <div className="p-6 border-b border-gray-100"><h2 className="text-xl font-bold text-gray-900">AI Risk Analysis</h2></div>
             <div className="p-6 space-y-4">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="text-sm font-medium text-gray-700 mb-2">Fill with a saved contract</p>
+                <div className="flex flex-wrap gap-2">{contracts.slice(0, 3).map(contract => <button key={contract.id} type="button" disabled={analyzing} onClick={() => setSelectedContract(String(contract.id))} className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-100">{contract.title || `Contract #${contract.id}`}</button>)}</div>
+                {contracts.length < 2 && <p className="text-xs text-gray-600 mt-2">Multiple examples need at least two saved contracts. Select an existing contract before analyzing; no sample record is created.</p>}
+              </div>
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Select Contract</label><select value={selectedContract} onChange={(e) => setSelectedContract(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg"><option value="">Select contract...</option>{contracts.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select></div>
               <p className="text-sm text-gray-500">Our AI will analyze the contract for financial, legal, operational, and reputational risks.</p>
               <div className="flex justify-end gap-3"><button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg">Cancel</button><button onClick={handleAnalyze} disabled={!selectedContract || analyzing || submitting} className="px-4 py-2 bg-primary-600 text-white rounded-lg disabled:opacity-50">{analyzing ? 'Analyzing...' : 'Analyze'}</button></div>

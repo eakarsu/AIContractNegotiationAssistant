@@ -140,7 +140,7 @@ export default function Login({ onLogin, onSwitchToRegister, onForgotPassword }:
               onClick={fillDemoCredentials}
               className="w-full py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
             >
-              Auto Fill Demo Credentials
+              Fill Demo Credentials
             </button>
             <p className="text-xs text-gray-500 text-center mt-3">
               Fill the local demo account, then click Sign In.

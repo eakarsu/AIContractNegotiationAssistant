@@ -8,7 +8,6 @@ import {
   CheckCircle,
   Clock,
   TrendingUp,
-  DollarSign,
   Shield,
   Scale,
   Highlighter,

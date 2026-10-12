@@ -1,5 +1,6 @@
+import FormattedAIReport from '../components/FormattedAIReport';
 import { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Trash2, FileText, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Trash2, Sparkles } from 'lucide-react';
 import { sendChatMessage, getChatHistory, clearChatHistory, getContracts, analyzeContract } from '../services/api';
 import { useToast } from '../hooks/useToast';
 
@@ -125,6 +126,9 @@ export default function AIChat() {
               <option value="negotiation">Negotiation Tips</option>
               <option value="compliance">Compliance Review</option>
             </select>
+            <div className="flex flex-wrap gap-1" aria-label="Fill analysis type">{[
+              ['summary', 'Summary'], ['risks', 'Risk review'], ['negotiation', 'Negotiation tips'],
+            ].map(([type, label]) => <button key={type} type="button" disabled={submitting} onClick={() => setAnalysisType(type)} className="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100">{label}</button>)}</div>
             <button onClick={handleAnalyze} disabled={!analysisType || submitting} className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"><Sparkles size={20} /></button>
           </>
         )}
@@ -139,9 +143,10 @@ export default function AIChat() {
               <p className="text-gray-600 mb-6">Ask me anything about contracts, negotiations, or legal terms.</p>
               <div className="flex flex-wrap justify-center gap-2">
                 {quickPrompts.map((prompt, i) => (
-                  <button key={i} onClick={() => setInput(prompt)} className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200">{prompt}</button>
+                  <button key={i} type="button" onClick={() => { setInput(prompt); setSelectedContract(current => current || (contracts[i % contracts.length]?.id ? String(contracts[i % contracts.length].id) : '')); setAnalysisType(['risks', 'summary', 'negotiation', 'compliance', 'negotiation'][i]); }} className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200">{prompt}</button>
                 ))}
               </div>
+              {!contracts.length && <p className="text-sm text-gray-500 mt-3">No saved contract is available for optional context. Add or select a real contract when available.</p>}
             </div>
           )}
 
@@ -149,7 +154,7 @@ export default function AIChat() {
             <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
               {msg.role === 'assistant' && <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center"><Bot className="text-primary-600" size={18} /></div>}
               <div className={`max-w-[70%] p-3 rounded-xl ${msg.role === 'user' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                <p className="whitespace-pre-wrap">{msg.content}</p>
+                {msg.role === 'assistant' ? <FormattedAIReport response={msg.content} /> : <p className="whitespace-pre-wrap">{String(msg.content)}</p>}
               </div>
               {msg.role === 'user' && <div className="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"><User className="text-gray-600" size={18} /></div>}
             </div>

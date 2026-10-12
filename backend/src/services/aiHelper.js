@@ -12,8 +12,32 @@ const prisma = new PrismaClient();
 
 const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022';
 
+function assertAIRequestActive(signal) {
+  if (!signal?.aborted) return;
+  const error = signal.reason instanceof Error ? signal.reason : new Error('AI request cancelled.');
+  if (!error.name || error.name === 'Error') error.name = 'AbortError';
+  throw error;
+}
+
+function retryDelay(milliseconds, signal) {
+  assertAIRequestActive(signal);
+  return new Promise((resolve, reject) => {
+    const cleanup = () => signal?.removeEventListener('abort', abort);
+    const timer = setTimeout(() => { cleanup(); resolve(); }, milliseconds);
+    const abort = () => { clearTimeout(timer); cleanup(); try { assertAIRequestActive(signal); } catch (error) { reject(error); } };
+    signal?.addEventListener('abort', abort, { once: true });
+    if (signal?.aborted) abort();
+  });
+}
+
 async function callOpenRouter(systemPrompt, userMessage, opts = {}) {
-  const { temperature = 0.5, maxTokens = 3000, model = DEFAULT_MODEL } = opts;
+  const { temperature = 0.5, maxTokens = 3000, model = DEFAULT_MODEL, signal } = opts;
+  assertAIRequestActive(signal);
+  if (!process.env.OPENROUTER_API_KEY) {
+    const error = new Error('OpenRouter is not configured. Add OPENROUTER_API_KEY and restart the backend.');
+    error.status = 503;
+    throw error;
+  }
   const url = (process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1') + '/chat/completions';
 
   const payload = {
@@ -33,32 +57,56 @@ async function callOpenRouter(systemPrompt, userMessage, opts = {}) {
     'X-Title': 'AI Contract Negotiation Assistant'
   };
 
-  let lastErr;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload), timeout: 90000 });
-      if (!r.ok) {
-        if (r.status >= 500 || r.status === 429) {
-          await new Promise(res => setTimeout(res, 800 * (attempt + 1)));
-          lastErr = new Error(`OpenRouter ${r.status}`);
-          continue;
+  const controller = new AbortController();
+  const cancel = () => controller.abort(signal.reason);
+  signal?.addEventListener('abort', cancel, { once: true });
+  if (signal?.aborted) cancel();
+  const timeout = setTimeout(() => {
+    const error = new Error('OpenRouter took too long to respond. Try again.');
+    error.name = 'TimeoutError';
+    error.status = 504;
+    controller.abort(error);
+  }, 90000);
+  timeout.unref?.();
+  try {
+    let lastErr;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      assertAIRequestActive(controller.signal);
+      try {
+        const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload), signal: controller.signal });
+        if (!r.ok) {
+          const error = new Error(`OpenRouter ${r.status}`);
+          error.status = r.status === 429 ? 429 : 502;
+          if ((r.status >= 500 || r.status === 429) && attempt === 0) {
+            await r.text();
+            lastErr = error;
+            await retryDelay(800, controller.signal);
+            continue;
+          }
+          await r.text();
+          throw error;
         }
-        const text = await r.text();
-        throw new Error(`OpenRouter ${r.status}: ${text}`);
+        const data = await r.json();
+        assertAIRequestActive(controller.signal);
+        const content = data.choices?.[0]?.message?.content;
+        if (typeof content !== 'string' || !content.trim()) {
+          const error = new Error('OpenRouter returned an empty answer. Try again.');
+          error.status = 502;
+          throw error;
+        }
+        return { content, model: data.model, usage: data.usage, raw: data };
+      } catch (error) {
+        assertAIRequestActive(controller.signal);
+        lastErr = error;
+        if (error.status || attempt === 1) throw error;
+        await retryDelay(800, controller.signal);
       }
-      const data = await r.json();
-      return {
-        content: data.choices?.[0]?.message?.content || '',
-        model: data.model,
-        usage: data.usage,
-        raw: data
-      };
-    } catch (err) {
-      lastErr = err;
-      await new Promise(res => setTimeout(res, 800 * (attempt + 1)));
     }
+    throw lastErr;
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener('abort', cancel);
   }
-  throw lastErr;
 }
 
 function parseAIJson(text) {
@@ -75,7 +123,8 @@ function parseAIJson(text) {
   return null;
 }
 
-async function saveAIResult({ feature, contractId, userId, input, output, model, usage }) {
+async function saveAIResult({ feature, contractId, userId, input, output, model, usage, signal }) {
+  assertAIRequestActive(signal);
   try {
     return await prisma.aIResult.create({
       data: {
@@ -89,9 +138,10 @@ async function saveAIResult({ feature, contractId, userId, input, output, model,
       }
     });
   } catch (err) {
+    assertAIRequestActive(signal);
     console.error('saveAIResult failed:', err.message);
     return null;
   }
 }
 
-module.exports = { callOpenRouter, parseAIJson, saveAIResult, DEFAULT_MODEL, prisma };
+module.exports = { callOpenRouter, parseAIJson, saveAIResult, assertAIRequestActive, DEFAULT_MODEL, prisma };

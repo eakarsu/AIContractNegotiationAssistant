@@ -10,7 +10,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed:demo": "ALLOW_DEMO_SEED=true node src/seed.js",
     "create-user": "node scripts/create-user.js",
-    "test": "node --test test/governed-workflow.test.js"
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",

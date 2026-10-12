@@ -1,8 +1,15 @@
+import FormattedAIReport from '../components/FormattedAIReport';
 import { useState } from 'react';
 import api from '../services/api';
 import { MessageSquare, Send } from 'lucide-react';
 
-type ChatMsg = { role: 'user' | 'assistant'; content: string };
+type ChatMsg = { role: 'user' | 'assistant'; content: unknown };
+
+const examples = [
+  { label: 'Service terms', contractText: 'The supplier will deliver the website in three milestones. Invoices are due 30 days after acceptance. The customer may request corrections within ten business days.', question: 'What are the main obligations and missing acceptance details?' },
+  { label: 'Data processing', contractText: 'The vendor may use customer data to provide the subscription service. It will return data within 30 days after termination and notify the customer of a confirmed incident.', question: 'Which data handling terms should be clarified before signing?' },
+  { label: 'Confidentiality', contractText: 'Each party must protect confidential information for three years and may disclose it to advisers bound by confidentiality. Public information is excluded.', question: 'Summarize the confidentiality duties and any negotiation points.' },
+];
 
 export default function ChatAboutContractStateless() {
   const [contractText, setContractText] = useState('');
@@ -30,7 +37,7 @@ export default function ChatAboutContractStateless() {
         contract_text: contractText,
         messages: next,
       });
-      const reply = typeof data.reply === 'string' ? data.reply : JSON.stringify(data.reply);
+      const reply = data.reply;
       setMessages((m) => [...m, { role: 'assistant', content: reply }]);
     } catch (e: any) {
       setError(e.response?.data?.error || e.response?.data?.errors?.[0]?.msg || e.message);
@@ -56,6 +63,7 @@ export default function ChatAboutContractStateless() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4">Contract</h2>
+          <div className="flex flex-wrap gap-2 mb-3" aria-label="Fill sample inputs">{examples.map(example => <button key={example.label} type="button" disabled={loading} onClick={() => { setContractText(example.contractText); setInput(example.question); setError(null); }} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100">{example.label}</button>)}</div>
           <textarea
             rows={20}
             value={contractText}
@@ -87,7 +95,7 @@ export default function ChatAboutContractStateless() {
                 }`}
               >
                 <div className="text-xs font-medium text-gray-500 mb-1">{m.role}</div>
-                <div className="whitespace-pre-wrap">{m.content}</div>
+                <div className="whitespace-pre-wrap">{m.role === 'assistant' ? <FormattedAIReport response={m.content} /> : String(m.content)}</div>
               </div>
             ))}
             {loading && <div className="text-gray-500 text-sm">Thinking...</div>}

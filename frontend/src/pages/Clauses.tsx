@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Scale, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Scale } from 'lucide-react';
 import { getClauses, createClause, deleteClause, exportClausesCSV, downloadBlob } from '../services/api';
 import { useToast } from '../hooks/useToast';
 import { useEscapeKey } from '../hooks/useEscapeKey';

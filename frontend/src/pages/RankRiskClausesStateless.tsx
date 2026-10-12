@@ -1,6 +1,29 @@
+import FormattedAIReport from '../components/FormattedAIReport';
 import { useState } from 'react';
 import api from '../services/api';
 import { ListOrdered, Play } from 'lucide-react';
+
+
+const examples = [
+  {
+    "label": "Services agreement",
+    "clausesText": "The supplier may raise fees at any time.\n\nThe customer has ten business days to accept deliverables.\n\nEach party must protect confidential information for three years.",
+    "contractType": "Services agreement",
+    "partyPerspective": "buyer"
+  },
+  {
+    "label": "Software subscription",
+    "clausesText": "The provider may use customer data for marketing.\n\nThe provider will notify the customer of an incident within 72 hours.\n\nThe customer can export data for 30 days after termination.",
+    "contractType": "Software subscription",
+    "partyPerspective": "subscriber"
+  },
+  {
+    "label": "Consulting engagement",
+    "clausesText": "The consultant retains all intellectual property in deliverables.\n\nInvoices are due before acceptance.\n\nEither party may terminate with 30 days written notice.",
+    "contractType": "Consulting agreement",
+    "partyPerspective": "client"
+  }
+];
 
 export default function RankRiskClausesStateless() {
   const [clausesText, setClausesText] = useState('');
@@ -49,6 +72,9 @@ export default function RankRiskClausesStateless() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4">Input</h2>
           <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3" aria-label="Fill sample inputs">
+              {examples.map((example) => <button key={example.label} type="button" disabled={loading} onClick={() => { setClausesText(example.clausesText); setContractType(example.contractType); setPartyPerspective(example.partyPerspective); setResult(null); setError(null); }} className="rounded-lg bg-white border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100 disabled:opacity-50">{example.label}</button>)}
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Clauses <span className="text-red-500">*</span>
@@ -108,9 +134,7 @@ export default function RankRiskClausesStateless() {
               {typeof result.count === 'number' && (
                 <div className="text-xs text-gray-500 mb-2">Clauses analyzed: {result.count}</div>
               )}
-              <pre className="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-[600px] whitespace-pre-wrap">
-                {typeof result.ranking === 'string' ? result.ranking : JSON.stringify(result.ranking, null, 2)}
-              </pre>
+              <FormattedAIReport response={result} />
             </div>
           )}
         </div>

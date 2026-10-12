@@ -14,9 +14,32 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { aiRateLimiter } = require('../middleware/rateLimiter');
-const { callOpenRouter, parseAIJson, saveAIResult, prisma } = require('../services/aiHelper');
+const { callOpenRouter, parseAIJson, saveAIResult, assertAIRequestActive, prisma } = require('../services/aiHelper');
 
 const router = express.Router();
+
+router.use((req, res, next) => {
+  if (req.method !== 'POST') return next();
+  const controller = new AbortController();
+  req.aiSignal = controller.signal;
+  const abort = () => {
+    const error = new Error('AI request cancelled.');
+    error.name = 'AbortError';
+    controller.abort(error);
+  };
+  const cleanup = () => { req.removeListener('aborted', abort); res.removeListener('close', close); res.removeListener('finish', cleanup); };
+  const close = () => { if (!res.writableEnded) abort(); cleanup(); };
+  req.once('aborted', abort);
+  res.once('close', close);
+  res.once('finish', cleanup);
+  if (req.aborted || res.destroyed) abort();
+  next();
+});
+
+function sendAIError(req, res, error) {
+  if (req.aiSignal?.aborted || res.destroyed || res.headersSent) return;
+  res.status(error.status || 500).json({ error: error.message });
+}
 
 const SYSTEM = 'You are an expert contract negotiation attorney with deep knowledge of commercial law, deal structuring, and negotiation strategy. Always respond with valid JSON when requested.';
 
@@ -55,11 +78,12 @@ Return JSON:
   "key_clauses_summary": [{ "clause": "string", "purpose": "string" }],
   "review_checklist": ["string"]
 }`;
-    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.4, maxTokens: 5000 });
+    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.4, maxTokens: 5000, signal: req.aiSignal });
     const parsed = parseAIJson(r.content) || { raw: r.content };
-    await saveAIResult({ feature: 'draft-from-scratch', userId: uid(req), input: { contract_type, jurisdiction }, output: parsed, model: r.model, usage: r.usage });
+    await saveAIResult({ signal: req.aiSignal, feature: 'draft-from-scratch', userId: uid(req), input: { contract_type, jurisdiction }, output: parsed, model: r.model, usage: r.usage });
+    assertAIRequestActive(req.aiSignal);
     res.json({ ...parsed, model: r.model, usage: r.usage });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { sendAIError(req, res, e); }
 });
 
 // 2) Red-team negotiation simulator (AI plays counterparty)
@@ -97,11 +121,12 @@ Return JSON:
   "lessons_learned": ["string"],
   "counter_strategies_for_real_negotiation": ["string"]
 }`;
-    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.8, maxTokens: 4000 });
+    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.8, maxTokens: 4000, signal: req.aiSignal });
     const parsed = parseAIJson(r.content) || { raw: r.content };
-    await saveAIResult({ feature: 'redteam-simulator', userId: uid(req), input: { contract_type }, output: parsed, model: r.model, usage: r.usage });
+    await saveAIResult({ signal: req.aiSignal, feature: 'redteam-simulator', userId: uid(req), input: { contract_type }, output: parsed, model: r.model, usage: r.usage });
+    assertAIRequestActive(req.aiSignal);
     res.json({ ...parsed, model: r.model, usage: r.usage });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { sendAIError(req, res, e); }
 });
 
 // 3) Historical contract analytics — cluster similar contracts, visualize outcomes
@@ -145,12 +170,13 @@ Return JSON:
   "insights": ["string"],
   "recommended_focus_areas": ["string"]
 }`;
-    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.4, maxTokens: 3500 });
+    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.4, maxTokens: 3500, signal: req.aiSignal });
     const parsed = parseAIJson(r.content) || { raw: r.content };
     const output = { ...parsed, stats };
-    await saveAIResult({ feature: 'historical-analytics', userId: uid(req), input: { contract_type, party_id, period_days }, output, model: r.model, usage: r.usage });
+    await saveAIResult({ signal: req.aiSignal, feature: 'historical-analytics', userId: uid(req), input: { contract_type, party_id, period_days }, output, model: r.model, usage: r.usage });
+    assertAIRequestActive(req.aiSignal);
     res.json({ ...output, model: r.model, usage: r.usage });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { sendAIError(req, res, e); }
 });
 
 // 4) Cross-party clause conflict detector
@@ -195,11 +221,12 @@ Return JSON:
   "consistency_score": 0,
   "executive_summary": "string"
 }`;
-    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.3, maxTokens: 3500 });
+    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.3, maxTokens: 3500, signal: req.aiSignal });
     const parsed = parseAIJson(r.content) || { raw: r.content };
-    await saveAIResult({ feature: 'clause-conflict-detector', contractId: parseInt(contract_id), userId: uid(req), input: { contract_id }, output: parsed, model: r.model, usage: r.usage });
+    await saveAIResult({ signal: req.aiSignal, feature: 'clause-conflict-detector', contractId: parseInt(contract_id), userId: uid(req), input: { contract_id }, output: parsed, model: r.model, usage: r.usage });
+    assertAIRequestActive(req.aiSignal);
     res.json({ ...parsed, model: r.model, usage: r.usage });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { sendAIError(req, res, e); }
 });
 
 // 5) Regulatory update monitor
@@ -241,11 +268,12 @@ Return JSON:
   "compliance_score": 0,
   "executive_summary": "string"
 }`;
-    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.3, maxTokens: 3500 });
+    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.3, maxTokens: 3500, signal: req.aiSignal });
     const parsed = parseAIJson(r.content) || { raw: r.content };
-    await saveAIResult({ feature: 'regulatory-monitor', contractId: parseInt(contract_id), userId: uid(req), input: { regulations }, output: parsed, model: r.model, usage: r.usage });
+    await saveAIResult({ signal: req.aiSignal, feature: 'regulatory-monitor', contractId: parseInt(contract_id), userId: uid(req), input: { regulations }, output: parsed, model: r.model, usage: r.usage });
+    assertAIRequestActive(req.aiSignal);
     res.json({ ...parsed, model: r.model, usage: r.usage });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { sendAIError(req, res, e); }
 });
 
 // 6) Sentiment analysis on contract language (favorability)
@@ -283,11 +311,12 @@ Return JSON:
   ],
   "executive_summary": "string"
 }`;
-    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.3, maxTokens: 3500 });
+    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.3, maxTokens: 3500, signal: req.aiSignal });
     const parsed = parseAIJson(r.content) || { raw: r.content };
-    await saveAIResult({ feature: 'sentiment-analysis', userId: uid(req), input: { our_role, text_len: String(text).length }, output: parsed, model: r.model, usage: r.usage });
+    await saveAIResult({ signal: req.aiSignal, feature: 'sentiment-analysis', userId: uid(req), input: { our_role, text_len: String(text).length }, output: parsed, model: r.model, usage: r.usage });
+    assertAIRequestActive(req.aiSignal);
     res.json({ ...parsed, model: r.model, usage: r.usage });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { sendAIError(req, res, e); }
 });
 
 // 7) Pricing recommender from precedents
@@ -338,12 +367,13 @@ Return JSON:
   "value_drivers": ["string"],
   "risks_to_pricing": ["string"]
 }`;
-    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.4, maxTokens: 3000 });
+    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.4, maxTokens: 3000, signal: req.aiSignal });
     const parsed = parseAIJson(r.content) || { raw: r.content };
     const output = { ...parsed, historical_stats: stats };
-    await saveAIResult({ feature: 'pricing-recommender', userId: uid(req), input: { contract_type, scope, industry, region, party_id }, output, model: r.model, usage: r.usage });
+    await saveAIResult({ signal: req.aiSignal, feature: 'pricing-recommender', userId: uid(req), input: { contract_type, scope, industry, region, party_id }, output, model: r.model, usage: r.usage });
+    assertAIRequestActive(req.aiSignal);
     res.json({ ...output, model: r.model, usage: r.usage });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { sendAIError(req, res, e); }
 });
 
 // 8) Auto-redline engine: smart counter-redlines from company policy
@@ -380,11 +410,12 @@ Return JSON:
   ],
   "negotiation_message_draft": "Suggested email/letter to counterparty"
 }`;
-    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.3, maxTokens: 4000 });
+    const r = await callOpenRouter(SYSTEM, prompt, { temperature: 0.3, maxTokens: 4000, signal: req.aiSignal });
     const parsed = parseAIJson(r.content) || { raw: r.content };
-    await saveAIResult({ feature: 'auto-redline-engine', userId: uid(req), input: { contract_type }, output: parsed, model: r.model, usage: r.usage });
+    await saveAIResult({ signal: req.aiSignal, feature: 'auto-redline-engine', userId: uid(req), input: { contract_type }, output: parsed, model: r.model, usage: r.usage });
+    assertAIRequestActive(req.aiSignal);
     res.json({ ...parsed, model: r.model, usage: r.usage });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { sendAIError(req, res, e); }
 });
 
 // Browse persisted ai_results (paginated)

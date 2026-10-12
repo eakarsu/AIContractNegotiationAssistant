@@ -1,3 +1,4 @@
+import FormattedAIReport from "../components/FormattedAIReport";
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Lock, FileText, Edit, Trash2, Save, Copy, Check, Printer, Shield, Lightbulb } from 'lucide-react';
@@ -314,7 +315,7 @@ export default function NDAGeneratorDetail() {
                 <span className="text-xs text-gray-400 ml-2">(click to expand)</span>
               </summary>
               <div className="mt-3 bg-gray-50 rounded-xl p-4 border border-gray-200 overflow-x-auto">
-                <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">{JSON.stringify(aiAnalysis, null, 2)}</pre>
+                <FormattedAIReport response={aiAnalysis} />
               </div>
             </details>
           </div>

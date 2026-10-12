@@ -1,6 +1,26 @@
+import FormattedAIReport from '../components/FormattedAIReport';
 import { useState } from 'react';
 import api from '../services/api';
 import { AlertTriangle, Play } from 'lucide-react';
+
+
+const examples = [
+  {
+    "label": "Supplier liability",
+    "contractText": "The supplier may change fees without notice. Its total liability is limited to one month of fees, including for data loss.",
+    "partyPerspective": "buyer"
+  },
+  {
+    "label": "Confidential information",
+    "contractText": "The recipient may share confidential information with any affiliate and retain copies indefinitely after termination.",
+    "partyPerspective": "disclosing party"
+  },
+  {
+    "label": "Termination rights",
+    "contractText": "The customer may terminate only after a material breach and a 90-day cure period; the vendor may terminate for convenience immediately.",
+    "partyPerspective": "customer"
+  }
+];
 
 export default function HighlightRisksStateless() {
   const [contractText, setContractText] = useState('');
@@ -43,6 +63,9 @@ export default function HighlightRisksStateless() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4">Input</h2>
           <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3" aria-label="Fill sample inputs">
+              {examples.map((example) => <button key={example.label} type="button" disabled={loading} onClick={() => { setContractText(example.contractText); setPartyPerspective(example.partyPerspective); setResult(null); setError(null); }} className="rounded-lg bg-white border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100 disabled:opacity-50">{example.label}</button>)}
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contract Text <span className="text-red-500">*</span>
@@ -91,9 +114,7 @@ export default function HighlightRisksStateless() {
               {result.party_perspective && (
                 <div className="text-xs text-gray-500 mb-2">Perspective: {result.party_perspective}</div>
               )}
-              <pre className="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-[600px] whitespace-pre-wrap">
-                {typeof result.analysis === 'string' ? result.analysis : JSON.stringify(result.analysis, null, 2)}
-              </pre>
+              <FormattedAIReport response={result} />
             </div>
           )}
         </div>
