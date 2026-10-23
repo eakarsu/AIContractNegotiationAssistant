@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, TrendingUp, DollarSign, FileText, AlertTriangle, CheckCircle, Clock, Users, Plus, Search } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function Analytics() {
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -156,7 +158,7 @@ export default function Analytics() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {paginatedAnalytics.map((metric) => (
-                    <tr key={metric.id} onClick={() => navigate(`/analytics/${metric.id}`)} className="hover:bg-gray-50 cursor-pointer">
+                    <tr key={metric.id} onClick={() => setSelectedRecord({ item: metric, detailPath: `/analytics/${metric.id}` })} className="hover:bg-gray-50 cursor-pointer">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-emerald-100 rounded-lg"><TrendingUp className="text-emerald-600" size={18} /></div>

@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Users, Building, Mail } from 'lucide-react';
@@ -20,6 +21,7 @@ export default function Parties() {
   const confirm = useConfirm();
   const [parties, setParties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -142,7 +144,7 @@ export default function Parties() {
                     className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                   />
                 </div>
-                <div onClick={() => navigate(`/parties/${party.id}`)} className="pl-5">
+                <div onClick={() => setSelectedRecord({ item: party, detailPath: `/parties/${party.id}` })} className="pl-5">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-green-100 rounded-lg"><Building className="text-green-600" size={20} /></div>
                     <div className="flex-1">

@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Shield, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function Compliance() {
   const [checks, setChecks] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [newCheck, setNewCheck] = useState({ contractId: '', regulation: '' });
@@ -109,7 +111,7 @@ export default function Compliance() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {paginatedChecks.map((check) => (
-                  <tr key={check.id} onClick={() => navigate(`/compliance/${check.id}`)} className="hover:bg-gray-50 cursor-pointer">
+                  <tr key={check.id} onClick={() => setSelectedRecord({ item: check, detailPath: `/compliance/${check.id}` })} className="hover:bg-gray-50 cursor-pointer">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-indigo-100 rounded-lg"><Shield className="text-indigo-600" size={20} /></div>

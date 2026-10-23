@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, GitCompare, Check, X, Sparkles, Loader2 } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function Redlines() {
   const [redlines, setRedlines] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -158,7 +160,7 @@ export default function Redlines() {
         <>
           <div className="space-y-4">
             {paginatedRedlines.map((redline) => (
-              <div key={redline.id} onClick={() => navigate(`/redlines/${redline.id}`)} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md transition">
+              <div key={redline.id} onClick={() => setSelectedRecord({ item: redline, detailPath: `/redlines/${redline.id}` })} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md transition">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-orange-100 rounded-lg"><GitCompare className="text-orange-600" size={20} /></div>

@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, AlertTriangle } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function RiskAnalysis() {
   const [risks, setRisks] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedContract, setSelectedContract] = useState('');
@@ -97,7 +99,7 @@ export default function RiskAnalysis() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {paginatedRisks.map((risk) => (
-              <div key={risk.id} onClick={() => navigate(`/risks/${risk.id}`)} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md hover:border-primary-200 transition">
+              <div key={risk.id} onClick={() => setSelectedRecord({ item: risk, detailPath: `/risks/${risk.id}` })} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md hover:border-primary-200 transition">
                 <div className="flex items-start justify-between mb-3">
                   <div className="p-2 bg-red-100 rounded-lg"><AlertTriangle className="text-red-600" size={20} /></div>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${risk.category === 'high' ? 'bg-red-100 text-red-700' : risk.category === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{risk.category}</span>

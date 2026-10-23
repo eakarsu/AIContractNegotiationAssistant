@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
@@ -17,6 +18,7 @@ export default function Deadlines() {
   const [deadlines, setDeadlines] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -141,7 +143,7 @@ export default function Deadlines() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {paginatedDeadlines.map((deadline) => (
-                  <tr key={deadline.id} onClick={() => navigate(`/deadlines/${deadline.id}`)} className="hover:bg-gray-50 cursor-pointer">
+                  <tr key={deadline.id} onClick={() => setSelectedRecord({ item: deadline, detailPath: `/deadlines/${deadline.id}` })} className="hover:bg-gray-50 cursor-pointer">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${deadline.status === 'completed' ? 'bg-green-100' : isOverdue(deadline.dueDate) ? 'bg-red-100' : 'bg-cyan-100'}`}>

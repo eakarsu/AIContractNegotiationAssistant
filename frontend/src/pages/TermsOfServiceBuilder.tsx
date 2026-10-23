@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Trash2, Globe, Beaker } from 'lucide-react';
@@ -15,6 +16,7 @@ export default function TermsOfServiceBuilder() {
   const toast = useToast();
   const [terms, setTerms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -127,7 +129,7 @@ export default function TermsOfServiceBuilder() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {paginated.map((t) => (
-              <div key={t.id} onClick={() => navigate(`/ai-tools/terms-of-service-builder/${t.id}`)} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md hover:border-primary-200 transition">
+              <div key={t.id} onClick={() => setSelectedRecord({ item: t, detailPath: `/ai-tools/terms-of-service-builder/${t.id}` })} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md hover:border-primary-200 transition">
                 <div className="flex items-start justify-between mb-3">
                   <div className="p-2 bg-cyan-100 rounded-lg"><Globe className="text-cyan-600" size={20} /></div>
                   <div className="flex items-center gap-2">

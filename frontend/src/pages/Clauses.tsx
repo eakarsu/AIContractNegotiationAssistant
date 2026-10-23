@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Scale } from 'lucide-react';
@@ -20,6 +21,7 @@ export default function Clauses() {
   const confirm = useConfirm();
   const [clauses, setClauses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -210,7 +212,7 @@ export default function Clauses() {
                     className="rounded border-gray-300"
                   />
                 </div>
-                <div onClick={() => navigate(`/clauses/${clause.id}`)}>
+                <div onClick={() => setSelectedRecord({ item: clause, detailPath: `/clauses/${clause.id}` })}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="p-2 bg-purple-100 rounded-lg ml-6">
                       <Scale className="text-purple-600" size={20} />

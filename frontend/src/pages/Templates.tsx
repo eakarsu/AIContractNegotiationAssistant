@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, LayoutTemplate, Copy } from 'lucide-react';
@@ -15,6 +16,7 @@ export default function Templates() {
   const toast = useToast();
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -100,7 +102,7 @@ export default function Templates() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {paginatedTemplates.map((template) => (
-              <div key={template.id} onClick={() => navigate(`/templates/${template.id}`)} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md hover:border-primary-200 transition">
+              <div key={template.id} onClick={() => setSelectedRecord({ item: template, detailPath: `/templates/${template.id}` })} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-pointer hover:shadow-md hover:border-primary-200 transition">
                 <div className="flex items-start justify-between mb-3">
                   <div className="p-2 bg-yellow-100 rounded-lg"><LayoutTemplate className="text-yellow-600" size={20} /></div>
                   <button onClick={(e) => handleClone(template.id, e)} className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg" title="Use as contract"><Copy size={18} /></button>

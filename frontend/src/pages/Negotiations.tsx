@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, MessageSquare } from 'lucide-react';
@@ -18,6 +19,7 @@ export default function Negotiations() {
   const [contracts, setContracts] = useState<any[]>([]);
   const [parties, setParties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -137,7 +139,7 @@ export default function Negotiations() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {paginatedNegotiations.map((neg) => (
-                  <tr key={neg.id} onClick={() => navigate(`/negotiations/${neg.id}`)} className="hover:bg-gray-50 cursor-pointer">
+                  <tr key={neg.id} onClick={() => setSelectedRecord({ item: neg, detailPath: `/negotiations/${neg.id}` })} className="hover:bg-gray-50 cursor-pointer">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-purple-100 rounded-lg"><MessageSquare className="text-purple-600" size={20} /></div>

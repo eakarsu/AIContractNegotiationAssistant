@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -39,6 +40,7 @@ export default function Dashboard() {
   const [recentContracts, setRecentContracts] = useState<any[]>([]);
   const [upcomingDeadlines, setUpcomingDeadlines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -237,7 +239,7 @@ export default function Dashboard() {
             {recentContracts.map((contract) => (
               <div
                 key={contract.id}
-                onClick={() => navigate(`/contracts/${contract.id}`)}
+                onClick={() => setSelectedRecord({ item: contract, detailPath: `/contracts/${contract.id}` })}
                 className="p-4 hover:bg-gray-50 cursor-pointer transition"
               >
                 <div className="flex items-center justify-between">
@@ -274,7 +276,7 @@ export default function Dashboard() {
             {upcomingDeadlines.map((deadline) => (
               <div
                 key={deadline.id}
-                onClick={() => navigate(`/deadlines/${deadline.id}`)}
+                onClick={() => setSelectedRecord({ item: deadline, detailPath: `/deadlines/${deadline.id}` })}
                 className="p-4 hover:bg-gray-50 cursor-pointer transition"
               >
                 <div className="flex items-center justify-between">

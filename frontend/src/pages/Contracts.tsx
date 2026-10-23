@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, FileText, DollarSign } from 'lucide-react';
@@ -21,6 +22,7 @@ export default function Contracts() {
   const [contracts, setContracts] = useState<any[]>([]);
   const [parties, setParties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -281,7 +283,7 @@ export default function Contracts() {
                           className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                         />
                       </td>
-                      <td className="px-6 py-4" onClick={() => navigate(`/contracts/${contract.id}`)}>
+                      <td className="px-6 py-4" onClick={() => setSelectedRecord({ item: contract, detailPath: `/contracts/${contract.id}` })}>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-blue-100 rounded-lg">
                             <FileText className="text-blue-600" size={20} />
@@ -292,9 +294,9 @@ export default function Contracts() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600" onClick={() => navigate(`/contracts/${contract.id}`)}>{contract.contractType}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600" onClick={() => navigate(`/contracts/${contract.id}`)}>{contract.party?.name || '-'}</td>
-                      <td className="px-6 py-4" onClick={() => navigate(`/contracts/${contract.id}`)}>
+                      <td className="px-6 py-4 text-sm text-gray-600" onClick={() => setSelectedRecord({ item: contract, detailPath: `/contracts/${contract.id}` })}>{contract.contractType}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600" onClick={() => setSelectedRecord({ item: contract, detailPath: `/contracts/${contract.id}` })}>{contract.party?.name || '-'}</td>
+                      <td className="px-6 py-4" onClick={() => setSelectedRecord({ item: contract, detailPath: `/contracts/${contract.id}` })}>
                         {contract.value ? (
                           <div className="flex items-center gap-1 text-sm text-gray-900">
                             <DollarSign size={14} />
@@ -302,7 +304,7 @@ export default function Contracts() {
                           </div>
                         ) : '-'}
                       </td>
-                      <td className="px-6 py-4" onClick={() => navigate(`/contracts/${contract.id}`)}>
+                      <td className="px-6 py-4" onClick={() => setSelectedRecord({ item: contract, detailPath: `/contracts/${contract.id}` })}>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                           contract.status === 'active' ? 'bg-green-100 text-green-700' :
                           contract.status === 'draft' ? 'bg-gray-100 text-gray-700' :
@@ -315,7 +317,7 @@ export default function Contracts() {
                           {contract.status?.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4" onClick={() => navigate(`/contracts/${contract.id}`)}>
+                      <td className="px-6 py-4" onClick={() => setSelectedRecord({ item: contract, detailPath: `/contracts/${contract.id}` })}>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                           contract.riskLevel === 'high' ? 'bg-red-100 text-red-700' :
                           contract.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-700' :

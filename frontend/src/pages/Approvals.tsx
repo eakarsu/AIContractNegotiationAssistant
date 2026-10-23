@@ -1,3 +1,4 @@
+import RecordDetailModal from '../components/RecordDetailModal';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, CheckCircle, Clock, XCircle } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function Approvals() {
   const [approvals, setApprovals] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<{ item: any; detailPath?: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -155,7 +157,7 @@ export default function Approvals() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {paginatedApprovals.map((approval) => (
-                  <tr key={approval.id} onClick={() => navigate(`/approvals/${approval.id}`)} className="hover:bg-gray-50 cursor-pointer">
+                  <tr key={approval.id} onClick={() => setSelectedRecord({ item: approval, detailPath: `/approvals/${approval.id}` })} className="hover:bg-gray-50 cursor-pointer">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${approval.status === 'approved' ? 'bg-green-100' : approval.status === 'rejected' ? 'bg-red-100' : 'bg-yellow-100'}`}>

@@ -72,6 +72,9 @@ app.use('/api/auth', authRoutes);
 // Tenant-scoped, playbook-grounded reference workflow.
 app.use('/api/governed-negotiations', authMiddleware, require('./routes/governedNegotiation'));
 
+const fp31cNeg = require('./routes/fp31c').createFeaturePack({ authenticate: authMiddleware, getRecords: async () => { try { const { PrismaClient } = require('@prisma/client'); const pc = new PrismaClient(); try { return await pc.contract.findMany({ take: 50, orderBy: { createdAt: 'desc' } }); } finally { await pc.$disconnect(); } } catch { return []; } } });
+app.use('/api/tasks', fp31cNeg.tasksRouter);
+app.use('/api/fp31c', fp31cNeg.packRouter);
 if (process.env.ENABLE_LEGACY_GLOBAL_ROUTES === 'true') {
 
 // Protected routes
